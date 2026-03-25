@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Composite — Tell Us About Yourself</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f7f6f3;
+      --surface: #ffffff;
+      --border: rgba(0,0,0,0.1);
+      --border-hover: rgba(0,0,0,0.22);
+      --border-selected: rgba(0,0,0,0.7);
+      --text-primary: #111110;
+      --text-secondary: #6b6a66;
+      --text-tertiary: #a09f9a;
+      --accent: #111110;
+      --accent-fg: #ffffff;
+      --danger: #c0392b;
+      --success-bg: #e9f5ee;
+      --success-text: #1e7a3e;
+      --check-color: #ffffff;
+      --font: 'DM Sans', sans-serif;
+      --mono: 'DM Mono', monospace;
+      --radius: 10px;
+      --radius-sm: 6px;
+    }
+
+    html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 3rem 1rem 5rem;
+    }
+
+    .survey-wrap {
+      width: 100%;
+      max-width: 600px;
+    }
+
+    /* Header */
+    .survey-header { margin-bottom: 2.75rem; }
+
+    .logo-mark {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 2rem;
+    }
+
+    .logo-mark svg { width: 30px; height: 30px; }
+
+    .logo-mark span {
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      color: var(--text-primary);
+    }
+
+    .survey-title {
+      font-size: 26px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+    }
+
+    .survey-subtitle {
+      font-size: 14.5px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      font-weight: 300;
+    }
+
+    /* Progress */
+    .progress-track {
+      height: 1.5px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 1.75rem 0 0.6rem;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .progress-label {
+      font-size: 11.5px;
+      color: var(--text-tertiary);
+      font-family: var(--mono);
+      letter-spacing: 0.02em;
+      margin-bottom: 2rem;
+    }
+
+    /* Question blocks */
+    .question-block {
+      display: none;
+      animation: slideUp 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .question-block.active { display: block; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .question-eyebrow {
+      font-size: 10.5px;
+      font-family: var(--mono);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      margin-bottom: 0.6rem;
+    }
+
+    .question-text {
+      font-size: 18px;
+      font-weight: 500;
+      letter-spacing: -0.015em;
+      line-height: 1.35;
+      margin-bottom: 0.3rem;
+      color: var(--text-primary);
+    }
+
+    .question-hint {
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      margin-bottom: 1.4rem;
+      font-weight: 300;
+    }
+
+    .optional-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-family: var(--mono);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 6px;
+      margin-left: 8px;
+      vertical-align: middle;
+      position: relative;
+      top: -1px;
+    }
+
+    /* Options */
+    .options-grid { display: flex; flex-direction: column; gap: 7px; }
+
+    .option-item {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      padding: 13px 15px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s, transform 0.1s;
+      user-select: none;
+    }
+
+    .option-item:hover {
+      border-color: var(--border-hover);
+      background: #fafaf8;
+    }
+
+    .option-item:active { transform: scale(0.995); }
+
+    .option-item.selected {
+      border-color: var(--border-selected);
+      background: #fafaf8;
+    }
+
+    .option-item.selected .option-box {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .option-item.selected .option-box::after { opacity: 1; }
+
+    .option-box {
+      width: 19px;
+      height: 19px;
+      flex-shrink: 0;
+      border: 1.5px solid var(--border-hover);
+      border-radius: 5px;
+      position: relative;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .option-box.radio { border-radius: 50%; }
+
+    .option-box::after {
+      content: '';
+      position: absolute;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .option-box:not(.radio)::after {
+      left: 5px; top: 2px;
+      width: 6px; height: 10px;
+      border: 2px solid var(--check-color);
+      border-top: none; border-left: none;
+      transform: rotate(45deg);
+    }
+
+    .option-box.radio::after {
+      left: 4px; top: 4px;
+      width: 7px; height: 7px;
+      background: var(--check-color);
+      border-radius: 50%;
+    }
+
+    .option-text { flex: 1; }
+
+    .option-label {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--text-primary);
+      line-height: 1.4;
+    }
+
+    .option-sub {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      margin-top: 2px;
+      font-weight: 300;
+    }
+
+    /* Text inputs */
+    .field-group { display: flex; flex-direction: column; gap: 7px; }
+
+    .field-note {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      font-weight: 300;
+    }
+
+    .input-with-prefix {
+      display: flex;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color 0.15s;
+    }
+
+    .input-with-prefix:focus-within { border-color: var(--border-selected); }
+
+    .input-prefix {
+      padding: 0 0 0 14px;
+      font-size: 14px;
+      color: var(--text-tertiary);
+      font-family: var(--mono);
+      flex-shrink: 0;
+    }
+
+    .text-input {
+      width: 100%;
+      padding: 13px 14px;
+      font-size: 14px;
+      font-family: var(--font);
+      font-weight: 400;
+      color: var(--text-primary);
+      background: transparent;
+      border: none;
+      outline: none;
+    }
+
+    .text-input::placeholder { color: var(--text-tertiary); }
+
+    .text-input-standalone {
+      width: 100%;
+      padding: 13px 14px;
+      font-size: 14px;
+      font-family: var(--font);
+      font-weight: 400;
+      color: var(--text-primary);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .text-input-standalone:focus { border-color: var(--border-selected); }
+    .text-input-standalone::placeholder { color: var(--text-tertiary); }
+
+    .write-in-wrap {
+      display: none;
+      margin-top: 8px;
+    }
+
+    /* Error */
+    .error-msg {
+      font-size: 12px;
+      color: var(--danger);
+      margin-top: 8px;
+      display: none;
+      font-family: var(--mono);
+    }
+
+    /* Nav row */
+    .nav-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 1.75rem;
+    }
+
+    .nav-right { display: flex; gap: 8px; }
+
+    .btn {
+      padding: 11px 22px;
+      font-size: 13.5px;
+      font-weight: 500;
+      font-family: var(--font);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      border: 1px solid var(--border-hover);
+      background: transparent;
+      color: var(--text-primary);
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
+      letter-spacing: -0.01em;
+    }
+
+    .btn:hover { background: rgba(0,0,0,0.04); border-color: var(--border-selected); }
+    .btn:active { transform: scale(0.97); }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--accent-fg);
+      border-color: var(--accent);
+    }
+
+    .btn-primary:hover { background: #2a2a28; border-color: #2a2a28; }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+    /* Success screen */
+    .success-screen {
+      display: none;
+      text-align: center;
+      padding: 4rem 1rem;
+      animation: slideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .success-mark {
+      width: 52px;
+      height: 52px;
+      border: 1.5px solid var(--border-selected);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+    }
+
+    .success-title {
+      font-size: 22px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+
+    .success-sub {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.65;
+      font-weight: 300;
+    }
+
+    .sheet-status {
+      margin-top: 1.25rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-family: var(--mono);
+      padding: 5px 12px;
+      border-radius: 20px;
+    }
+
+    .pill-ok { background: var(--success-bg); color: var(--success-text); }
+    .pill-err { background: #fdecea; color: var(--danger); }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      body { padding: 2rem 1rem 4rem; }
+      .survey-title { font-size: 22px; }
+      .question-text { font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="survey-wrap">
+
+    <div class="survey-header">
+      <div class="logo-mark">
+        <svg viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="30" height="30" rx="7" fill="#111110"/>
+          <path d="M8 15C8 11.134 11.134 8 15 8C18.866 8 22 11.134 22 15" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M15 15V22" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+          <circle cx="15" cy="15" r="2.2" fill="white"/>
+        </svg>
+        <span>Composite</span>
+      </div>
+      <div class="survey-title">Tell us about yourself</div>
+      <div class="survey-subtitle">Takes 90 seconds. Sign up for Composite propaganda.</div>
+    </div>
+
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width: 12.5%"></div>
+    </div>
+    <div class="progress-label" id="progressLabel">01 / 08</div>
+
+    <div id="surveyForm">
+
+      <!-- Q1: Email -->
+      <div class="question-block active" id="q1">
+        <div class="question-eyebrow">Question 01</div>
+        <div class="question-text">What's your email address?</div>
+        <div class="question-hint">So we know who you are.</div>
+        <div class="field-group">
+          <input class="text-input-standalone" type="email" id="q1-email" placeholder="you@example.com" />
+          <div class="field-note">No spam. Unsubscribe anytime.</div>
+        </div>
+        <div class="error-msg" id="q1-err">Please enter a valid email address.</div>
+        <div class="nav-row">
+          <span></span>
+          <button class="btn btn-primary" onclick="nextEmail()">Continue</button>
+        </div>
+      </div>
+
+      <!-- Q2: Telegram (optional) -->
+      <div class="question-block" id="q2">
+        <div class="question-eyebrow">Question 02</div>
+        <div class="question-text">Telegram handle <span class="optional-tag">optional</span></div>
+        <div class="question-hint">We'll use this to reach out directly. Skip if you don't have one.</div>
+        <div class="field-group">
+          <div class="input-with-prefix">
+            <span class="input-prefix">@</span>
+            <input class="text-input" type="text" id="q2-telegram" placeholder="yourhandle" />
+          </div>
+        </div>
+        <div class="nav-row">
+          <button class="btn" onclick="goTo(1,2)">Back</button>
+          <div class="nav-right">
+            <button class="btn" onclick="skipTelegram()">Skip</button>
+            <button class="btn btn-primary" onclick="nextTelegram()">Continue</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q3: Platforms -->
+      <div class="question-block" id="q3">
+        <div class="question-eyebrow">Question 03</div>
+        <div class="question-text">Where do you currently bet on outcomes?</div>
+        <div class="question-hint">Select all that apply.</div>
+        <div class="options-grid" id="q3-opts">
+          <div class="option-item" data-val="Sports betting app" onclick="toggleMulti(this,'q3')">
+            <div class="option-box"></div>
+            <div class="option-text"><div class="option-label">Sports betting app</div><div class="option-sub">DraftKings, FanDuel, BetMGM, Caesars, etc.</div></div>
+          </div>
+          <div class="option-item" data-val="Polymarket" onclick="toggleMulti(this,'q3')">
+            <div class="option-box"></div>
+            <div class="option-text"><div class="option-label">Polymarket</div><div class="option-sub">Prediction markets on politics, sports, world events</div></div>
+          </div>
+          <div class="option-item" data-val="Kalshi" onclick="toggleMulti(this,'q3')">
+            <div class="option-box"></div>
+            <div class="option-text"><div class="option-label">Kalshi</div><div class="option-sub">Regulated event contracts</div></div>
+          </div>
+          <div class="option-item" data-val="Offshore sportsbook" onclick="toggleMulti(this,'q3')">
+            <div class="option-box"></div>
+            <div class="option-text"><div class="option-label">Offshore sportsbook</div><div class="option-sub">Pinnacle, Bet365, Bookmaker, etc.</div></div>
+          </div>
+          <div class="option-item" data-val="Another prediction market" onclick="toggleMulti(this,'q3')">
+            <div class="option-box"></div>
+            <div class="option-text"><div class="option-label">Another prediction market</div></div>
+          </div>
+          <div class="option-item" data-val="None yet" onclick="toggleMulti(this,'q3')">
+            <div class="option-box"></div>
+            <div class="option-text"><div class="option-label">None yet — I'm new to this</div></div>
+          </div>
+        </div>
+        <div class="error-msg" id="q3-err">Please select at least one option.</div>
+        <div class="nav-row">
+          <button class="btn" onclick="goTo(2,3)">Back</button>
+          <button class="btn btn-primary" onclick="nextQ(3)">Continue</button>
+        </div>
+      </div>
+
+      <!-- Q4: Event types -->
+      <div class="question-block" id="q4">
+        <div class="question-eyebrow">Question 04</div>
+        <div class="question-text">What do you bet on most?</div>
+        <div class="question-hint">Select all that apply.</div>
+        <div class="options-grid" id="q4-opts">
+          <div class="option-item" data-val="Sports outcomes" onclick="toggleMulti(this,'q4')">
+            <div class="option-box"></div>
+            <div class="option-text"><div class="option-label">Sports outcomes</div><div class="option-sub">Game results, championships, player props</div></div>
+          </div>
+          <div class="option-item" data-val="Politics & elections" onclick="toggleMulti(this,'q4')">
+            <div class="option-box"></div>
+            <div class="option-text"><div class="option-label">Politics and elections</div><div class="option-sub">Candidates, legislation, policy decisions</div></div>
+          </div>
+          <div class="option-item" data-val="News & world events" onclick="toggleMulti(this,'q4')">
+            <div class="option-box"></div>
+            <div class="option-text"><div class="option-label">News and world events</div><div class="option-sub">Geopolitics, conflicts, major announcements</div></div>
+          </div>
+          <div class="option-item" data-val="Economic events" onclick="toggleMulti(this,'q4')">
+            <div class="option-box"></div>
+            <div class="option-text"><div class="option-label">Economic events</div><div class="option-sub">Fed decisions, jobs reports, inflation data</div></div>
+          </div>
+          <div class="option-item" data-val="Crypto & equities" onclick="toggleMulti(this,'q4')">
+            <div class="option-box"></div>
+            <div class="option-text"><div class="option-label">Crypto and equities</div><div class="option-sub">Price targets, earnings outcomes, market moves</div></div>
+          </div>
+          <div class="option-item" data-val="Pop culture & entertainment" onclick="toggleMulti(this,'q4')">
+            <div class="option-box"></div>
+            <div class="option-text"><div class="option-label">Pop culture and entertainment</div><div class="option-sub">Awards shows, TV, celebrities</div></div>
+          </div>
+          <div class="option-item" data-val="Other" onclick="toggleMulti(this,'q4')">
+            <div class="option-box"></div>
+            <div class="option-text"><div class="option-label">Another market</div></div>
+          </div>
+        </div>
+        <div class="write-in-wrap" id="q4-writein-wrap">
+          <input class="text-input-standalone" id="q4-writein" placeholder="What else do you bet on?" />
+        </div>
+        <div class="error-msg" id="q4-err">Please select at least one option.</div>
+        <div class="nav-row">
+          <button class="btn" onclick="goTo(3,4)">Back</button>
+          <button class="btn btn-primary" onclick="nextQ4()">Continue</button>
+        </div>
+      </div>
+
+      <!-- Q4b: Sports drill-down (conditional) -->
+      <div class="question-block" id="q4b">
+        <div class="question-eyebrow">Question 04b</div>
+        <div class="question-text">Which sports do you bet on?</div>
+        <div class="question-hint">Select all that apply.</div>
+        <div class="options-grid" id="q4b-opts">
+          <div class="option-item" data-val="NFL" onclick="toggleMulti(this,'q4b')"><div class="option-box"></div><div class="option-text"><div class="option-label">NFL</div></div></div>
+          <div class="option-item" data-val="NBA" onclick="toggleMulti(this,'q4b')"><div class="option-box"></div><div class="option-text"><div class="option-label">NBA</div></div></div>
+          <div class="option-item" data-val="MLB" onclick="toggleMulti(this,'q4b')"><div class="option-box"></div><div class="option-text"><div class="option-label">MLB</div></div></div>
+          <div class="option-item" data-val="NHL" onclick="toggleMulti(this,'q4b')"><div class="option-box"></div><div class="option-text"><div class="option-label">NHL</div></div></div>
+          <div class="option-item" data-val="College football" onclick="toggleMulti(this,'q4b')"><div class="option-box"></div><div class="option-text"><div class="option-label">College football</div></div></div>
+          <div class="option-item" data-val="College basketball" onclick="toggleMulti(this,'q4b')"><div class="option-box"></div><div class="option-text"><div class="option-label">College basketball</div></div></div>
+          <div class="option-item" data-val="College baseball" onclick="toggleMulti(this,'q4b')"><div class="option-box"></div><div class="option-text"><div class="option-label">College baseball</div></div></div>
+          <div class="option-item" data-val="College hockey" onclick="toggleMulti(this,'q4b')"><div class="option-box"></div><div class="option-text"><div class="option-label">College hockey</div></div></div>
+          <div class="option-item" data-val="Premier League" onclick="toggleMulti(this,'q4b')"><div class="option-box"></div><div class="option-text"><div class="option-label">Premier League</div></div></div>
+          <div class="option-item" data-val="Tennis" onclick="toggleMulti(this,'q4b')"><div class="option-box"></div><div class="option-text"><div class="option-label">Tennis</div></div></div>
+          <div class="option-item" data-val="Other sport" onclick="toggleMulti(this,'q4b')"><div class="option-box"></div><div class="option-text"><div class="option-label">Something else</div></div></div>
+        </div>
+        <div class="write-in-wrap" id="q4b-writein-wrap">
+          <input class="text-input-standalone" id="q4b-writein" placeholder="Which sport?" />
+        </div>
+        <div class="error-msg" id="q4b-err">Please select at least one option.</div>
+        <div class="nav-row">
+          <button class="btn" onclick="goTo(4,4)">Back</button>
+          <button class="btn btn-primary" onclick="nextQ4b()">Continue</button>
+        </div>
+      </div>
+
+      <!-- Q5: User type -->
+      <div class="question-block" id="q5">
+        <div class="question-eyebrow">Question 05</div>
+        <div class="question-text">How would you describe yourself as a user?</div>
+        <div class="question-hint">Choose the one that fits best.</div>
+        <div class="options-grid" id="q5-opts">
+          <div class="option-item" data-val="Sharp — I research and find edges" onclick="toggleSingle(this,'q5')">
+            <div class="option-box radio"></div>
+            <div class="option-text"><div class="option-label">Sharp — I research and find edges</div><div class="option-sub">I model outcomes, track line movement, size based on edge</div></div>
+          </div>
+          <div class="option-item" data-val="Knowledgeable — I have strong opinions" onclick="toggleSingle(this,'q5')">
+            <div class="option-box radio"></div>
+            <div class="option-text"><div class="option-label">Knowledgeable — I have strong opinions</div><div class="option-sub">I follow events closely and back my conviction</div></div>
+          </div>
+          <div class="option-item" data-val="Recreational — I do it for fun" onclick="toggleSingle(this,'q5')">
+            <div class="option-box radio"></div>
+            <div class="option-text"><div class="option-label">Recreational — I do it for fun</div><div class="option-sub">Entertainment first, profit is a bonus</div></div>
+          </div>
+          <div class="option-item" data-val="Still figuring it out" onclick="toggleSingle(this,'q5')">
+            <div class="option-box radio"></div>
+            <div class="option-text"><div class="option-label">Still figuring it out</div></div>
+          </div>
+        </div>
+        <div class="error-msg" id="q5-err">Please select an option.</div>
+        <div class="nav-row">
+          <button class="btn" onclick="backToQ4()">Back</button>
+          <button class="btn btn-primary" onclick="nextQ(5)">Continue</button>
+        </div>
+      </div>
+
+      <!-- Q6: Bet size -->
+      <div class="question-block" id="q6">
+        <div class="question-eyebrow">Question 06</div>
+        <div class="question-text">What's your typical bet size per event?</div>
+        <div class="question-hint">Choose one.</div>
+        <div class="options-grid" id="q6-opts">
+          <div class="option-item" data-val="Under $100" onclick="toggleSingle(this,'q6')"><div class="option-box radio"></div><div class="option-text"><div class="option-label">Under $100</div></div></div>
+          <div class="option-item" data-val="$100 – $500" onclick="toggleSingle(this,'q6')"><div class="option-box radio"></div><div class="option-text"><div class="option-label">$100 – $500</div></div></div>
+          <div class="option-item" data-val="$500 – $2,000" onclick="toggleSingle(this,'q6')"><div class="option-box radio"></div><div class="option-text"><div class="option-label">$500 – $2,000</div></div></div>
+          <div class="option-item" data-val="$2,000+" onclick="toggleSingle(this,'q6')"><div class="option-box radio"></div><div class="option-text"><div class="option-label">$2,000+</div></div></div>
+        </div>
+        <div class="error-msg" id="q6-err">Please select an option.</div>
+        <div class="nav-row">
+          <button class="btn" onclick="goTo(5,6)">Back</button>
+          <button class="btn btn-primary" onclick="nextQ(6)">Continue</button>
+        </div>
+      </div>
+
+      <!-- Q7: Sizing blocker -->
+      <div class="question-block" id="q7">
+        <div class="question-eyebrow">Question 07</div>
+        <div class="question-text">When you have real conviction on an event, what holds you back from putting more on it?</div>
+        <div class="question-hint">Choose the one that fits best.</div>
+        <div class="options-grid" id="q7-opts">
+          <div class="option-item" data-val="I don't have enough cash to put up" onclick="toggleSingle(this,'q7')">
+            <div class="option-box radio"></div>
+            <div class="option-text"><div class="option-label">I don't have enough cash to put up</div><div class="option-sub">I'd size bigger if I could borrow against my position</div></div>
+          </div>
+          <div class="option-item" data-val="The book limits me when I win too much" onclick="toggleSingle(this,'q7')">
+            <div class="option-box radio"></div>
+            <div class="option-text"><div class="option-label">The book limits me when I win too much</div><div class="option-sub">I get restricted or banned on sharp books</div></div>
+          </div>
+          <div class="option-item" data-val="Not enough liquidity on the markets I want" onclick="toggleSingle(this,'q7')">
+            <div class="option-box radio"></div>
+            <div class="option-text"><div class="option-label">Not enough liquidity on the markets I want</div><div class="option-sub">Can't get my full size matched</div></div>
+          </div>
+          <div class="option-item" data-val="Risk management — I don't want to overexpose" onclick="toggleSingle(this,'q7')">
+            <div class="option-box radio"></div>
+            <div class="option-text"><div class="option-label">Risk management — I don't want to overexpose</div><div class="option-sub">Discipline, not lack of capital</div></div>
+          </div>
+          <div class="option-item" data-val="Nothing, I already size as big as I want" onclick="toggleSingle(this,'q7')">
+            <div class="option-box radio"></div>
+            <div class="option-text"><div class="option-label">Nothing — I already size as big as I want</div></div>
+          </div>
+        </div>
+        <div class="error-msg" id="q7-err">Please select an option.</div>
+        <div class="nav-row">
+          <button class="btn" onclick="goTo(6,7)">Back</button>
+          <button class="btn btn-primary" id="submitBtn" onclick="submitSurvey()">Submit</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Success screen -->
+    <div class="success-screen" id="successScreen">
+      <div class="success-mark">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M4 10L8 14L16 6" stroke="#111110" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="success-title">You're in</div>
+      <div class="success-sub">The propaganda starts soon.<br>We'll be in touch.</div>
+      <div class="sheet-status" id="sheetStatus"></div>
+    </div>
+
+  </div>
+
+  <script>
+    const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyWckZX4PBo9q86bQqMZJSa3cqDENbT7lhyTF9WIaJNrIDpfafBeRjkVf8WusHK3vJrgg/exec';
+    const TOTAL = 8;
+    const answers = {};
+
+    function updateProgress(step) {
+      const pct = Math.round((step / TOTAL) * 100);
+      document.getElementById('progressFill').style.width = pct + '%';
+      const label = String(step).padStart(2,'0') + ' / ' + String(TOTAL).padStart(2,'0');
+      document.getElementById('progressLabel').textContent = label;
+    }
+
+    function showBlock(id) {
+      document.querySelectorAll('.question-block').forEach(b => b.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function goTo(from, to) { showBlock('q' + to); updateProgress(to); }
+
+    function nextEmail() {
+      const val = document.getElementById('q1-email').value.trim();
+      const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+      document.getElementById('q1-err').style.display = valid ? 'none' : 'block';
+      if (!valid) return;
+      answers.email = val;
+      showBlock('q2'); updateProgress(2);
+    }
+
+    function nextTelegram() {
+      const raw = document.getElementById('q2-telegram').value.trim().replace(/^@/, '');
+      answers.telegram = raw ? '@' + raw : '';
+      showBlock('q3'); updateProgress(3);
+    }
+
+    function skipTelegram() {
+      answers.telegram = '';
+      showBlock('q3'); updateProgress(3);
+    }
+
+    function toggleMulti(el, qid) {
+      if (qid === 'q3') {
+        const val = el.dataset.val;
+        if (val === 'None yet') {
+          document.querySelectorAll('#q3-opts .option-item').forEach(o => { if (o !== el) o.classList.remove('selected'); });
+        } else {
+          const none = document.querySelector('#q3-opts [data-val="None yet"]');
+          if (none) none.classList.remove('selected');
+        }
+      }
+      el.classList.toggle('selected');
+      if (qid === 'q4') {
+        const otherSel = document.querySelector('#q4-opts [data-val="Other"]').classList.contains('selected');
+        document.getElementById('q4-writein-wrap').style.display = otherSel ? 'block' : 'none';
+      }
+      if (qid === 'q4b') {
+        const otherSel = document.querySelector('#q4b-opts [data-val="Other sport"]').classList.contains('selected');
+        document.getElementById('q4b-writein-wrap').style.display = otherSel ? 'block' : 'none';
+      }
+    }
+
+    function toggleSingle(el, qid) {
+      document.querySelectorAll('#' + qid + '-opts .option-item').forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+
+    function getSelected(qid) {
+      return Array.from(document.querySelectorAll('#' + qid + '-opts .selected')).map(o => o.dataset.val);
+    }
+
+    function nextQ(current) {
+      const sel = getSelected('q' + current);
+      if (sel.length === 0) { document.getElementById('q' + current + '-err').style.display = 'block'; return; }
+      document.getElementById('q' + current + '-err').style.display = 'none';
+      answers['q' + current] = sel;
+      showBlock('q' + (current + 1)); updateProgress(current + 1);
+    }
+
+    function nextQ4() {
+      const sel = getSelected('q4');
+      if (sel.length === 0) { document.getElementById('q4-err').style.display = 'block'; return; }
+      document.getElementById('q4-err').style.display = 'none';
+      answers.q4 = sel;
+      if (sel.includes('Other')) answers.q4_other = document.getElementById('q4-writein').value;
+      if (sel.includes('Sports outcomes')) {
+        showBlock('q4b'); updateProgress(5);
+      } else {
+        showBlock('q5'); updateProgress(5);
+      }
+    }
+
+    function nextQ4b() {
+      const sel = getSelected('q4b');
+      if (sel.length === 0) { document.getElementById('q4b-err').style.display = 'block'; return; }
+      document.getElementById('q4b-err').style.display = 'none';
+      answers.q4b = sel;
+      if (sel.includes('Other sport')) answers.q4b_other = document.getElementById('q4b-writein').value;
+      showBlock('q5'); updateProgress(6);
+    }
+
+    function backToQ4() {
+      if ((answers.q4 || []).includes('Sports outcomes')) {
+        showBlock('q4b'); updateProgress(5);
+      } else {
+        showBlock('q4'); updateProgress(4);
+      }
+    }
+
+    async function submitSurvey() {
+      const sel = getSelected('q7');
+      if (sel.length === 0) { document.getElementById('q7-err').style.display = 'block'; return; }
+      document.getElementById('q7-err').style.display = 'none';
+      answers.q7 = sel;
+
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.textContent = 'Submitting...';
+
+      const sportsLine = answers.q4b
+        ? (answers.q4b.join(', ') + (answers.q4b_other ? ' — ' + answers.q4b_other : ''))
+        : 'N/A';
+
+      const payload = {
+        email:           answers.email || '',
+        telegram:        answers.telegram || '',
+        platforms:       (answers.q3  || []).join(', '),
+        eventTypes:      (answers.q4  || []).join(', ') + (answers.q4_other  ? ' — ' + answers.q4_other  : ''),
+        sportsCategories: sportsLine,
+        userType:        (answers.q5  || []).join(', '),
+        betSize:         (answers.q6  || []).join(', '),
+        sizingBlocker:   (answers.q7  || []).join(', ')
+      };
+
+      const emailBody =
+        'New Composite survey response:\n\n' +
+        'Email: '           + payload.email            + '\n' +
+        'Telegram: '        + (payload.telegram || 'Not provided') + '\n' +
+        'Platforms used: '  + payload.platforms        + '\n' +
+        'Event types: '     + payload.eventTypes       + '\n' +
+        'Sports categories: ' + payload.sportsCategories + '\n' +
+        'User type: '       + payload.userType         + '\n' +
+        'Typical bet size: ' + payload.betSize         + '\n' +
+        'What holds them back: ' + payload.sizingBlocker;
+
+      document.getElementById('surveyForm').style.display = 'none';
+      document.getElementById('successScreen').style.display = 'block';
+
+      window.location.href =
+        'mailto:Josh@projective.finance' +
+        '?subject=' + encodeURIComponent('New Composite Survey Response') +
+        '&body='    + encodeURIComponent(emailBody);
+
+      try {
+        await fetch(SHEET_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        document.getElementById('sheetStatus').innerHTML =
+          '<span class="pill pill-ok">Saved to Google Sheets</span>';
+      } catch(e) {
+        document.getElementById('sheetStatus').innerHTML =
+          '<span class="pill pill-err">Sheet save failed — email still sent</span>';
+      }
+    }
+
+    // Allow Enter key on email field
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('q1-email').addEventListener('keydown', e => {
+        if (e.key === 'Enter') nextEmail();
+      });
+      document.getElementById('q2-telegram').addEventListener('keydown', e => {
+        if (e.key === 'Enter') nextTelegram();
+      });
+    });
+  </script>
+</body>
+</html>
